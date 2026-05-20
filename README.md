@@ -430,3 +430,57 @@ pip3 install gpiozero spidev Adafruit_DHT
 ```
 
 ---
+
+
+
+//THINGSPEAK:
+#include <ESP8266WiFi.h>
+#include <ThingSpeak.h>
+#include <DHT.h>
+
+const char* ssid = "YOUR_WIFI_NAME";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+unsigned long channelID = YOUR_CHANNEL_ID;
+const char* writeAPIKey = "YOUR_WRITE_API_KEY";
+
+WiFiClient client;
+
+#define DHTPIN D4
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+Serial.begin(115200);
+
+WiFi.begin(ssid, password);
+
+while (WiFi.status() != WL_CONNECTED) {
+delay(1000);
+Serial.println("Connecting...");
+}
+
+Serial.println("WiFi Connected");
+
+ThingSpeak.begin(client);
+dht.begin();
+}
+
+void loop() {
+float temp = dht.readTemperature();
+float hum = dht.readHumidity();
+
+ThingSpeak.setField(1, temp);
+ThingSpeak.setField(2, hum);
+
+int status = ThingSpeak.writeFields(channelID, writeAPIKey);
+
+if(status == 200) {
+Serial.println("Data sent successfully");
+} else {
+Serial.println("Failed to send data");
+}
+
+delay(15000);
+}
